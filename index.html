@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Exploded View</title>
+<title>3D Lab Views</title>
 <meta name="description" content="17 lab automation systems taken apart in 3D: the science each runs, the models and software that drive it, the hardware, and the components underneath.">
-<meta property="og:title" content="Exploded View: how lab machines actually work">
+<meta property="og:title" content="3D Lab Views: how lab machines actually work">
 <meta property="og:description" content="17 lab automation systems taken apart in 3D: the science each runs, the models and software that drive it, the hardware, and the components underneath.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://michaelraspuzzi.github.io/labautomationin3d/">
@@ -156,7 +156,7 @@ h1{font:600 40px/44px ui-serif,"New York",Georgia,serif;letter-spacing:-.01em;ma
 </style>
 </head>
 <body>
-<div class="mast"><span class="brand">Exploded View</span></div>
+<div class="mast"><span class="brand">3D Lab Views</span></div>
 <header class="top">
   <h1>How lab machines actually work</h1>
   <p class="dek" id="dek"></p>
@@ -1809,12 +1809,12 @@ CADM['berkeley-a-lab'] = mat => {
   // poses play stretches of the landing loop, each with its own camera
   const POSE = {}, VIEW = {};
   const P_ = (name, a, b, view, extra = {}) => { POSE[name] = { m: 's', seg: [a, b], ...extra }; VIEW[name] = view; };
-  P_('hero', 0, HERO.T, [.28, .36, 1.16]); P_('gaps', 0, HERO.T, [.2, .45, .98]);
+  P_('hero', 0, HERO.T, [.28, .3, .82]); P_('gaps', 0, HERO.T, [.2, .45, .98]);
   P_('labman', 0, 30, [-.4, .3, 1.1]); P_('dose', 0, 11, [-.62, .26, 1.25]); P_('mix', 9, 24, [-.25, .3, 1.2]); P_('slurry', 22, 42, [.35, .32, 1.2]); P_('carousel', 38, 56, [.15, .42, 1.2]);
   P_('rail', 0, 20, [.25, .3, 1.1]); P_('furnace', 3, 30, [.1, .18, 1.25]); P_('tray', 25, 48, [.35, .4, 1.2]); P_('grind', 0, 22, [.55, .3, 1.15]); P_('scan', 30, 56, [.75, .28, 1.15]);
   POSE.c21 = { m: 'c' }; VIEW.c21 = [.4, .26, 1.15]; POSE.manual = { m: 'h' }; VIEW.manual = [.3, .24, 1.1];
   // the five layers: the opening card of each, then five cards. Software cards replay the stretch that shows what that software decides
-  const LSET = { science: [.0, .36, 1.16], ml: [.45, .32, 1.16], software: [-.35, .3, 1.16], system: [.28, .36, 1.16], components: [.25, .22, 1.16] };
+  const LSET = { science: [.0, .3, .86], ml: [.45, .3, .86], software: [-.35, .28, .86], system: [.28, .3, .86], components: [.25, .22, 1.16] };
   const PAT = { 'L-science-0': 'phases', 'L-science-1': 'hull', 'L-science-2': 'yield', 'L-science-3': 'temps', 'L-science-4': 'disorder',
     'L-ml-0': 'recipes', 'L-ml-1': 'temps', 'L-ml-2': 'arrows', 'L-ml-3': 'scan', 'L-ml-4': 'fit', 'L-software-3': 'exceptions' };
   Object.entries(LSET).forEach(([k, v]) => { P_('L-' + k, 0, HERO.T, v); for (let c = 0; c < 6; c++) P_('L-' + k + '-' + c, 0, HERO.T, [v[0] + (c - 2) * .12, v[1] + .04 * (c % 2), v[2]]); });
@@ -1851,6 +1851,7 @@ CADM['berkeley-a-lab'] = mat => {
   const VFILL = ['#888', '#c94f4f', '#d08a4a', '#b89a6a', '#a8946e', '#d9c9a4'], CFILL = [null, '#c2a273', '#c2a273', '#d9c9a4', '#3b3f6e'];
   function update(pose, k, t) {
     const Q = POSE[pose] || POSE.hero, kk = Math.min(1, k * 2.2);
+    GC.visible = GM.visible = Q.m !== 's'; // the two earlier labs below stay hidden until the history cards walk down to them
     // the floating panel and the exploded views only exist on their own cards (the slideshow draws 'hero' without the page's fading)
     Object.keys(P).forEach(id => { if (id[0] === '~') P[id].forEach(o => o.visible = pose !== 'hero'); });
     // a Science card with a protocol plays it: it starts when the card arrives and stops on the result; the card's button pauses or replays it
@@ -9282,6 +9283,7 @@ const RM = REEL.map(() => null);
 function rBuild(i) { if (RM[i] || !REEL[i]) return RM[i];
   const k = REEL[i], M0 = CADM[k](cmat); M0.update('hero', 1, 0); M0.group.updateMatrixWorld(true);
   const studio = []; M0.group.traverse(o => { if (o.isMesh && o.renderOrder === -1 && o.userData.mach) studio.push(o); }); studio.forEach(o => o.parent.remove(o)); // the film's studio floor stays in the film; here every machine shares one plain floor
+  Object.entries(M0.parts || {}).forEach(([id, objs]) => { if (id[0] === '~') [].concat(objs).forEach(o => o.traverse(m => m.layers.set(5))); }); // component cutaways belong to their own cards, never the whole machine
   const box = M0.wholeBox('hero'), sz = box.getSize(new THREE.Vector3()), ctr = box.getCenter(new THREE.Vector3()), s = 2.05 / sz.length();
   const hold = new THREE.Group(), spin = new THREE.Group(); M0.group.scale.setScalar(s); M0.group.position.copy(ctr).multiplyScalar(-s); spin.add(M0.group); hold.add(spin); rScene.add(hold);
   const clip = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), bottom = -sz.y * s / 2;
@@ -9338,6 +9340,8 @@ setInterval(() => { if (Date.now() - rHold > 6000 && rVisible && !document.hidde
 requestAnimationFrame(rFrame);
 document.querySelectorAll('.co').forEach(b => b.classList.toggle('nf', !hasFilm(C[+b.dataset.i].slug))); // machines without a film yet read quieter in the picker
 load(Math.max(0, C.findIndex(k => k.slug === (location.hash.slice(1) || REEL[0]))));
+rPos = rTo; // open on the linked machine's slide instead of gliding past others (each would load its film as it passed)
+if (location.hash.length > 1) rHold = Date.now() + 1e9; // a link to one machine stays on it: the reel only starts turning once the reader touches it
 requestAnimationFrame(frame);
 </script>
 </body>

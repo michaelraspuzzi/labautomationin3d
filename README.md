@@ -1,4 +1,4 @@
-# Exploded View: how lab machines actually work
+# 3D Lab Views: how lab machines actually work
 
 17 lab automation systems taken apart in 3D, from a desktop pipetting robot to a room-sized cell factory. Each film covers five layers: the science the machine runs, the models and software that drive it, the hardware, and the components underneath.
 
